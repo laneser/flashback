@@ -7,8 +7,10 @@ import android.os.Build
 import android.os.IBinder
 import com.flashback.app.audio.AudioPipeline
 import com.flashback.app.audio.AudioRecordSource
-import com.flashback.app.flash.CameraManagerFlashController
+import com.flashback.app.data.SettingsRepository
 import com.flashback.app.flash.FlashController
+import com.flashback.app.flash.FlashControllerFactory
+import com.flashback.app.flash.UsbSerialFlashController
 import com.flashback.app.ml.SoundClassifier
 import com.flashback.app.ml.YamNetClassifier
 import com.flashback.app.model.AppConstants
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 /** 前景服務，持續監聽環境音並執行觸發邏輯 */
@@ -52,20 +55,35 @@ class MonitoringService : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var monitorJob: Job? = null
+    private var settingsJob: Job? = null
     private var pipeline: AudioPipeline? = null
+    @Volatile
     private var flashController: FlashController? = null
     private var classifier: SoundClassifier? = null
+    private lateinit var settingsRepository: SettingsRepository
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         MonitoringNotification.createChannel(this)
-        flashController = CameraManagerFlashController(this)
+        settingsRepository = SettingsRepository(this)
+        flashController = FlashControllerFactory.create(this, com.flashback.app.data.UserSettings())
         classifier = try {
             YamNetClassifier(this)
         } catch (_: Exception) {
             null
+        }
+
+        // 監聽設定變更，重建 flashController
+        settingsJob = serviceScope.launch {
+            settingsRepository.settings
+                .distinctUntilChangedBy { Triple(it.flashMode, it.usbBaudRate, it.usbDeviceIndex) }
+                .collect { settings ->
+                    val old = flashController
+                    flashController = FlashControllerFactory.create(this@MonitoringService, settings)
+                    (old as? UsbSerialFlashController)?.close()
+                }
         }
     }
 
@@ -126,8 +144,10 @@ class MonitoringService : Service() {
 
     override fun onDestroy() {
         monitorJob?.cancel()
+        settingsJob?.cancel()
         pipeline?.stop()
         classifier?.close()
+        (flashController as? UsbSerialFlashController)?.close()
         _state.value = MonitoringState.IDLE
         _currentDb.value = 0.0
         _currentFft.value = floatArrayOf()

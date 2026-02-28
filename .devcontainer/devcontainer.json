@@ -3,6 +3,9 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "runArgs": [
+    "--add-host=host.docker.internal:host-gateway"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -13,6 +16,7 @@
   },
   "postCreateCommand": "cd /workspaces/flashback && gradle wrapper --gradle-version 8.11.1",
   "remoteEnv": {
-    "ANDROID_HOME": "/opt/android-sdk"
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ADB_SERVER_SOCKET": "tcp:host.docker.internal:5037"
   }
 }

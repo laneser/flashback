@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 萬用 USB 裝置過濾器，接受所有 USB serial 裝置 -->
+    <usb-device />
+</resources>

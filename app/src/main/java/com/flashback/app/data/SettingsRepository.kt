@@ -9,7 +9,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.flashback.app.model.FlashMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -27,6 +29,9 @@ class SettingsRepository(private val context: Context) {
         val CLASSIFICATION_ENABLED = booleanPreferencesKey("classification_enabled")
         val TIME_WINDOW_ENABLED = booleanPreferencesKey("time_window_enabled")
         val FLASH_ENABLED = booleanPreferencesKey("flash_enabled")
+        val FLASH_MODE = stringPreferencesKey("flash_mode")
+        val USB_BAUD_RATE = intPreferencesKey("usb_baud_rate")
+        val USB_DEVICE_INDEX = intPreferencesKey("usb_device_index")
     }
 
     val settings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -46,7 +51,14 @@ class SettingsRepository(private val context: Context) {
             timeWindowEnabled = prefs[Keys.TIME_WINDOW_ENABLED]
                 ?: UserSettings().timeWindowEnabled,
             flashEnabled = prefs[Keys.FLASH_ENABLED]
-                ?: UserSettings().flashEnabled
+                ?: UserSettings().flashEnabled,
+            flashMode = prefs[Keys.FLASH_MODE]?.let {
+                try { FlashMode.valueOf(it) } catch (_: Exception) { null }
+            } ?: UserSettings().flashMode,
+            usbBaudRate = prefs[Keys.USB_BAUD_RATE]
+                ?: UserSettings().usbBaudRate,
+            usbDeviceIndex = prefs[Keys.USB_DEVICE_INDEX]
+                ?: UserSettings().usbDeviceIndex
         )
     }
 
@@ -60,6 +72,9 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.CLASSIFICATION_ENABLED] = settings.classificationEnabled
             prefs[Keys.TIME_WINDOW_ENABLED] = settings.timeWindowEnabled
             prefs[Keys.FLASH_ENABLED] = settings.flashEnabled
+            prefs[Keys.FLASH_MODE] = settings.flashMode.name
+            prefs[Keys.USB_BAUD_RATE] = settings.usbBaudRate
+            prefs[Keys.USB_DEVICE_INDEX] = settings.usbDeviceIndex
         }
     }
 }

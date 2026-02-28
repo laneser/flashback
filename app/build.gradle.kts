@@ -68,6 +68,9 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // USB Serial
+    implementation(libs.usb.serial)
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 

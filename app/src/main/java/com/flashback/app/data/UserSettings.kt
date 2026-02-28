@@ -1,6 +1,7 @@
 package com.flashback.app.data
 
 import com.flashback.app.model.AppConstants
+import com.flashback.app.model.FlashMode
 
 /** 使用者設定 */
 data class UserSettings(
@@ -11,5 +12,8 @@ data class UserSettings(
     val endHour: Int = AppConstants.DEFAULT_END_HOUR,
     val classificationEnabled: Boolean = true,
     val timeWindowEnabled: Boolean = true,
-    val flashEnabled: Boolean = true
+    val flashEnabled: Boolean = true,
+    val flashMode: FlashMode = FlashMode.PHONE_FLASH,
+    val usbBaudRate: Int = AppConstants.DEFAULT_USB_BAUD_RATE,
+    val usbDeviceIndex: Int = AppConstants.DEFAULT_USB_DEVICE_INDEX
 )

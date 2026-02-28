@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flashback.app.data.SettingsRepository
 import com.flashback.app.data.UserSettings
+import com.flashback.app.model.FlashMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -47,6 +48,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun updateFlashEnabled(value: Boolean) {
         updateSettings { it.copy(flashEnabled = value) }
+    }
+
+    fun updateFlashMode(value: FlashMode) {
+        updateSettings { it.copy(flashMode = value) }
+    }
+
+    fun updateUsbBaudRate(value: Int) {
+        updateSettings { it.copy(usbBaudRate = value) }
+    }
+
+    fun updateUsbDeviceIndex(value: Int) {
+        updateSettings { it.copy(usbDeviceIndex = value) }
     }
 
     private fun updateSettings(transform: (UserSettings) -> UserSettings) {
