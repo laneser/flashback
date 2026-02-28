@@ -25,6 +25,9 @@ class YamNetClassifier(context: Context) : SoundClassifier {
             setNumThreads(2)
         }
         interpreter = Interpreter(model, options)
+        // YAMNet 模型的 input tensor 預設 shape 為 [1]，需 resize 為 [15600]
+        interpreter.resizeInput(0, intArrayOf(AppConstants.YAMNET_INPUT_SAMPLES))
+        interpreter.allocateTensors()
     }
 
     override fun classify(samples: ShortArray): ClassificationResult {

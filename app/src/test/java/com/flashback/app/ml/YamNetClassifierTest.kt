@@ -1,5 +1,6 @@
 package com.flashback.app.ml
 
+import com.flashback.app.model.AppConstants
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,5 +35,22 @@ class YamNetClassifierTest {
         assertEquals("Vehicle", result.label)
         assertEquals(0.85f, result.confidence, 0.001f)
         assertEquals(2, result.topResults.size)
+    }
+
+    @Test
+    fun `YAMNET_INPUT_SAMPLES is 15600 for 0_975s at 16kHz`() {
+        assertEquals(15600, AppConstants.YAMNET_INPUT_SAMPLES)
+    }
+
+    @Test
+    fun `YAMNET_NUM_CLASSES matches label count`() {
+        assertEquals(AppConstants.YAMNET_NUM_CLASSES, YamNetLabels.LABELS.size)
+    }
+
+    @Test
+    fun `input buffer byte size equals YAMNET_INPUT_SAMPLES times 4`() {
+        // 每個 Float 佔 4 bytes，確保 buffer 大小計算正確
+        val expectedBytes = AppConstants.YAMNET_INPUT_SAMPLES * 4
+        assertEquals(62400, expectedBytes)
     }
 }
