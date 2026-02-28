@@ -13,6 +13,7 @@
 | R-7 | TarsosDSP 維護狀態 | 函式庫停止更新、API 不相容 | 低 | 低 | 必要時自行實作 FFT（算法成熟） |
 | R-8 | iOS 雙平台維護成本 | 兩套程式碼需同步更新 | 中 | 中 | 核心邏輯相似；共通 WebSocket 協定確保互通性 |
 | R-9 | Tart VM 僅支援 Apple Silicon | 非 Apple Silicon 開發者無法建置 iOS | 中 | 低 | iOS 開發為可選，Android 版本獨立運作 |
+| R-10 | 外接閃光燈協定碎片化 | WiFi/BLE/2.4GHz 各廠商協定不統一 | 高 | 中 | Plugin 架構抽象化；優先支援主流品牌 |
 
 ## 11.2 法律風險
 

@@ -100,7 +100,7 @@ graph LR
     DUR_CHECK --> AND_GATE
     TIME_CHECK --> AND_GATE
 
-    AND_GATE -->|觸發| ACTION[Flash + Photo + WebSocket + Log]
+    AND_GATE -->|觸發| ACTION[Flash + Photo + WebSocket + Log<br/>+ 外接閃光 WiFi/BLE/2.4GHz]
 ```
 
 ### 音訊處理規格

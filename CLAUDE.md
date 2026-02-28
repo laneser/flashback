@@ -76,9 +76,9 @@ flashback/
 |------|------|------|
 | TarsosDSP | 音訊 FFT 頻譜分析 | Phase 1 |
 | TensorFlow Lite | YAMNet 聲音分類模型 | Phase 2 |
-| Ktor (WebSocket) | 多機聯動通訊 | Phase 3 |
 | CameraX | 相機閃光燈控制與拍照 | Phase 1 |
-| DataStore | 使用者設定持久化 | Phase 4 |
+| DataStore | 使用者設定持久化 | Phase 3 |
+| Ktor (WebSocket) | 多機聯動通訊 | Phase 4 |
 
 ### iOS 計畫中的技術棧（Phase 6）
 

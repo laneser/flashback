@@ -23,7 +23,9 @@ Flashback 是一套**飆車聲音偵測與閃光嚇阻系統**，運行於 Andro
 | F-9 | 參數設定介面（閾值、時段、靈敏度） | [PLANNED] |
 | F-10 | 觸發時自動拍照存檔 | [OPTIONAL] |
 | F-11 | Telegram Bot 通報 | [OPTIONAL] |
-| F-12 | ESP32 外接大型閃光燈控制 | [OPTIONAL] |
+| F-12a | 外接閃光燈 — WiFi 直連（閃光燈內建 WiFi） | [OPTIONAL] |
+| F-12b | 外接閃光燈 — Bluetooth 直連（閃光燈內建 BLE） | [OPTIONAL] |
+| F-12c | 外接閃光燈 — 2.4GHz 經 ESP32 橋接 | [OPTIONAL] |
 | F-13 | iOS App（Swift + SwiftUI）— 從裝置聯動閃光 | [PLANNED] |
 | F-14 | Android / iOS 跨平台多機協作 | [PLANNED] |
 

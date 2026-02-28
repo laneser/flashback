@@ -60,6 +60,7 @@ Application Scope
 | YAMNet 模型載入失敗 | 降級為純音量偵測模式 |
 | WebSocket 連線中斷 | 自動重連（exponential backoff），主機獨立運作不受影響 |
 | 閃光燈不可用 | 記錄 log，僅執行其他觸發動作 |
+| 外接閃光燈連線失敗 | 降級為手機內建閃光；記錄 warning |
 | 音訊緩衝區溢位 | 丟棄最舊幀（conflate），記錄 warning |
 | 儲存空間不足 | 停止拍照存檔，僅保留觸發記錄 |
 
@@ -89,6 +90,8 @@ Application Scope
 | `INTERNET` | WebSocket 通訊 | 多機模式必要 |
 | `ACCESS_WIFI_STATE` | 取得 WiFi 資訊 | 多機模式必要 |
 | `POST_NOTIFICATIONS` | 前景服務通知（Android 13+） | 必要 |
+| `BLUETOOTH_CONNECT` | BLE 外接閃光燈（Android 12+） | 選配 |
+| `BLUETOOTH_SCAN` | BLE 裝置掃描（Android 12+） | 選配 |
 | `WRITE_EXTERNAL_STORAGE` | 儲存拍照（Android < 10） | 選配 |
 
 ### 權限請求策略

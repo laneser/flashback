@@ -60,32 +60,49 @@ graph TB
 - 同一 WiFi 網路或手機熱點
 - 各裝置配備固定支架與供電
 
-## 7.3 進階部署（最強嚇阻）[OPTIONAL]
+## 7.3 外接閃光燈部署（三種方案）[OPTIONAL]
+
+### 方案 A：WiFi 直連
 
 ```mermaid
-graph TB
-    subgraph WiFi 區域網路
-        MAIN[📱 主手機<br/>Flashback Server]
-        S1[📱 從手機 A]
-        S2[📱 從手機 B]
-        ESP[🔌 ESP32<br/>MicroPython<br/>WebSocket Client]
-        EXT[💡 攝影棚閃光燈<br/>大功率 LED]
-
-        MAIN <-->|WebSocket| S1
-        MAIN <-->|WebSocket| S2
-        MAIN <-->|WebSocket| ESP
-        ESP -->|GPIO 控制| EXT
-    end
-
-    BOX[🔲 防水盒<br/>戶外安裝]
-    ESP --- BOX
-    EXT --- BOX
+graph LR
+    PHONE[📱 主手機] -->|WiFi| WF[💡 WiFi 閃光燈]
 ```
 
-**額外硬體：**
-- ESP32 開發板 × 1（約 NT$200）
-- 攝影棚閃光燈或大功率 LED 頻閃燈 × 1~2（NT$1,000~3,000）
-- 防水盒（戶外安裝用）
+- 閃光燈內建 WiFi，手機直接控制
+- 無需額外硬體，延遲低
+- 需閃光燈支援 WiFi 遙控協定
+
+### 方案 B：Bluetooth 直連
+
+```mermaid
+graph LR
+    PHONE[📱 主手機] -->|BLE| BF[💡 Bluetooth 閃光燈]
+```
+
+- 閃光燈內建 Bluetooth（BLE），手機直接配對控制
+- 無需額外硬體，省電
+- 傳輸距離較短（約 10~30m）
+
+### 方案 C：2.4GHz 經 ESP32 橋接
+
+```mermaid
+graph LR
+    PHONE[📱 主手機] -->|BT 或 WiFi| ESP[🔌 ESP32<br/>+ 2.4GHz 模組] -->|2.4GHz RF| RF[💡 2.4GHz 閃光燈<br/>攝影棚閃光燈]
+```
+
+- 適用於內建 2.4GHz 無線觸發器的攝影棚閃光燈
+- ESP32 作為橋接器：接收手機 BT/WiFi 指令，轉發 2.4GHz 射頻訊號
+- 閃光功率最強，嚇阻效果最佳
+- 需額外硬體：ESP32（約 NT$200）+ 2.4GHz 模組
+
+### 外接閃光方案比較
+
+| 方案 | 連線方式 | 額外硬體 | 預估成本 | 閃光功率 | 延遲 |
+|------|---------|---------|---------|---------|------|
+| A. WiFi 直連 | Phone → WiFi → Flash | 無 | NT$1,000~3,000 | 中 | 低 |
+| B. BLE 直連 | Phone → BLE → Flash | 無 | NT$1,000~3,000 | 中 | 低 |
+| C. 2.4GHz+ESP32 | Phone → BT/WiFi → ESP32 → 2.4GHz → Flash | ESP32 + 2.4GHz 模組 | NT$1,400~3,400 | 高 | 中 |
 
 ## 7.4 跨平台混合部署 [PLANNED]
 

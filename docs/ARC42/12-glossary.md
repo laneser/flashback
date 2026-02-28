@@ -22,16 +22,18 @@
 | — | AGP | Android Gradle Plugin |
 | — | AND 邏輯 | 所有條件必須同時滿足才觸發 |
 | — | AudioRecord | Android 低階音訊錄製 API |
+| — | BLE | Bluetooth Low Energy，低功耗藍牙 |
 | — | BOM | Bill of Materials，依賴版本清單 |
 | — | CameraX | Android Jetpack 相機 API 封裝 |
 | — | Compose | Jetpack Compose，Android 宣告式 UI 框架 |
 | — | Core ML | Apple 裝置端 ML 推論框架 |
 | — | Coroutine | Kotlin 協程，輕量級並行處理機制 |
 | — | dB (Decibel) | 分貝，聲音強度單位 |
-| — | ESP32 | Espressif 低成本 WiFi/BLE 微控制器 |
+| — | ESP32 | Espressif 低成本 WiFi/BLE 微控制器，本專案用作 2.4GHz 閃光燈橋接器 |
 | — | FFT | Fast Fourier Transform，快速傅立葉轉換 |
 | — | Flow | Kotlin Flow，冷串流非同步資料流 |
 | — | Ktor | 純 Kotlin 非同步網路框架 |
+| — | GATT | Generic Attribute Profile，BLE 通訊協定 |
 | — | MVVM | Model-View-ViewModel 架構模式 |
 | — | PCM | Pulse-Code Modulation，脈衝碼調變（數位音訊格式） |
 | — | RMS | Root Mean Square，均方根（音量計算方式） |
