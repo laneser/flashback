@@ -30,8 +30,18 @@ class UsbSerialFlashControllerTest {
     }
 
     @Test
-    fun `USB relay duration is 1000ms`() {
-        assertEquals(1000L, AppConstants.USB_RELAY_DURATION_MS)
+    fun `default flash duration is 100ms`() {
+        assertEquals(100L, AppConstants.DEFAULT_FLASH_DURATION_MS)
+    }
+
+    @Test
+    fun `default flash interval is 200ms`() {
+        assertEquals(200L, AppConstants.DEFAULT_FLASH_INTERVAL_MS)
+    }
+
+    @Test
+    fun `default flash count is 2`() {
+        assertEquals(2, AppConstants.DEFAULT_FLASH_COUNT)
     }
 
     @Test

@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.flashback.app.model.FlashMode
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,11 @@ class SettingsRepository(private val context: Context) {
         val FLASH_MODE = stringPreferencesKey("flash_mode")
         val USB_BAUD_RATE = intPreferencesKey("usb_baud_rate")
         val USB_DEVICE_INDEX = intPreferencesKey("usb_device_index")
+        val FLASH_DURATION = longPreferencesKey("flash_duration_ms")
+        val FLASH_INTERVAL = longPreferencesKey("flash_interval_ms")
+        val FLASH_COUNT = intPreferencesKey("flash_count")
+        val TARGET_LABELS = stringSetPreferencesKey("target_labels")
+        val COOLDOWN = longPreferencesKey("cooldown_ms")
     }
 
     val settings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
@@ -58,7 +64,17 @@ class SettingsRepository(private val context: Context) {
             usbBaudRate = prefs[Keys.USB_BAUD_RATE]
                 ?: UserSettings().usbBaudRate,
             usbDeviceIndex = prefs[Keys.USB_DEVICE_INDEX]
-                ?: UserSettings().usbDeviceIndex
+                ?: UserSettings().usbDeviceIndex,
+            flashDurationMs = prefs[Keys.FLASH_DURATION]
+                ?: UserSettings().flashDurationMs,
+            flashIntervalMs = prefs[Keys.FLASH_INTERVAL]
+                ?: UserSettings().flashIntervalMs,
+            flashCount = prefs[Keys.FLASH_COUNT]
+                ?: UserSettings().flashCount,
+            targetLabels = prefs[Keys.TARGET_LABELS]
+                ?: UserSettings().targetLabels,
+            cooldownMs = prefs[Keys.COOLDOWN]
+                ?: UserSettings().cooldownMs
         )
     }
 
@@ -75,6 +91,11 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.FLASH_MODE] = settings.flashMode.name
             prefs[Keys.USB_BAUD_RATE] = settings.usbBaudRate
             prefs[Keys.USB_DEVICE_INDEX] = settings.usbDeviceIndex
+            prefs[Keys.FLASH_DURATION] = settings.flashDurationMs
+            prefs[Keys.FLASH_INTERVAL] = settings.flashIntervalMs
+            prefs[Keys.FLASH_COUNT] = settings.flashCount
+            prefs[Keys.TARGET_LABELS] = settings.targetLabels
+            prefs[Keys.COOLDOWN] = settings.cooldownMs
         }
     }
 }

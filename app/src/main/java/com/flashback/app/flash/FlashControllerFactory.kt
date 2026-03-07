@@ -9,11 +9,19 @@ object FlashControllerFactory {
 
     fun create(context: Context, settings: UserSettings): FlashController {
         return when (settings.flashMode) {
-            FlashMode.PHONE_FLASH -> CameraManagerFlashController(context)
+            FlashMode.PHONE_FLASH -> CameraManagerFlashController(
+                context = context,
+                flashDurationMs = settings.flashDurationMs,
+                flashIntervalMs = settings.flashIntervalMs,
+                flashCount = settings.flashCount
+            )
             FlashMode.USB_RELAY -> UsbSerialFlashController(
                 context = context,
                 baudRate = settings.usbBaudRate,
-                deviceIndex = settings.usbDeviceIndex
+                deviceIndex = settings.usbDeviceIndex,
+                flashDurationMs = settings.flashDurationMs,
+                flashIntervalMs = settings.flashIntervalMs,
+                flashCount = settings.flashCount
             )
         }
     }

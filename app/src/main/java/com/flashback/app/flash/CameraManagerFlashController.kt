@@ -10,7 +10,12 @@ import kotlinx.coroutines.delay
  * 使用 Camera2 CameraManager.setTorchMode() 控制閃光燈。
  * 比 CameraX 更簡單直接，因為只需要開關手電筒。
  */
-class CameraManagerFlashController(context: Context) : FlashController {
+class CameraManagerFlashController(
+    context: Context,
+    private val flashDurationMs: Long = AppConstants.DEFAULT_FLASH_DURATION_MS,
+    private val flashIntervalMs: Long = AppConstants.DEFAULT_FLASH_INTERVAL_MS,
+    private val flashCount: Int = AppConstants.DEFAULT_FLASH_COUNT
+) : FlashController {
 
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private val cameraId: String? = findCameraWithFlash()
@@ -47,12 +52,12 @@ class CameraManagerFlashController(context: Context) : FlashController {
     }
 
     override suspend fun flashBurst() {
-        repeat(AppConstants.FLASH_BURST_COUNT) {
+        repeat(flashCount) {
             turnOn()
-            delay(AppConstants.FLASH_DURATION_MS)
+            delay(flashDurationMs)
             turnOff()
-            if (it < AppConstants.FLASH_BURST_COUNT - 1) {
-                delay(AppConstants.FLASH_BURST_INTERVAL_MS)
+            if (it < flashCount - 1) {
+                delay(flashIntervalMs)
             }
         }
     }

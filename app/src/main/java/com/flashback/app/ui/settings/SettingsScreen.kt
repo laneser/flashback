@@ -1,5 +1,6 @@
 package com.flashback.app.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,11 +10,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -22,14 +28,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flashback.app.ml.YamNetLabels
 import com.flashback.app.model.FlashMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +103,16 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("AI 分類", style = MaterialTheme.typography.titleMedium)
+                        Column {
+                            Text("AI 分類", style = MaterialTheme.typography.titleMedium)
+                            if (!settings.classificationEnabled) {
+                                Text(
+                                    "關閉 = 任何分類都觸發",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                         Switch(
                             checked = settings.classificationEnabled,
                             onCheckedChange = { viewModel.updateClassificationEnabled(it) }
@@ -109,6 +128,24 @@ fun SettingsScreen(
                             onValueChange = { viewModel.updateClassificationConfidence(it) },
                             valueRange = 0.3f..0.95f
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        var showLabelPicker by remember { mutableStateOf(false) }
+                        OutlinedButton(
+                            onClick = { showLabelPicker = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("觸發分類 (已選 ${settings.targetLabels.size} 項)")
+                        }
+                        if (showLabelPicker) {
+                            LabelPickerDialog(
+                                selectedLabels = settings.targetLabels,
+                                onConfirm = { selected ->
+                                    viewModel.updateTargetLabels(selected)
+                                    showLabelPicker = false
+                                },
+                                onDismiss = { showLabelPicker = false }
+                            )
+                        }
                     }
                 }
             }
@@ -130,6 +167,23 @@ fun SettingsScreen(
                 }
             }
 
+            // 觸發冷卻時間
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("觸發冷卻時間", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "%.1f 秒".format(settings.cooldownMs / 1000.0),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Slider(
+                        value = settings.cooldownMs.toFloat(),
+                        onValueChange = { viewModel.updateCooldown(it.toLong()) },
+                        valueRange = 1000f..30000f,
+                        steps = 28
+                    )
+                }
+            }
+
             // 監聽時段
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -138,7 +192,16 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("限定時段", style = MaterialTheme.typography.titleMedium)
+                        Column {
+                            Text("限定時段", style = MaterialTheme.typography.titleMedium)
+                            if (!settings.timeWindowEnabled) {
+                                Text(
+                                    "關閉 = 全時段監聽",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                         Switch(
                             checked = settings.timeWindowEnabled,
                             onCheckedChange = { viewModel.updateTimeWindowEnabled(it) }
@@ -178,10 +241,20 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("啟用閃光燈", style = MaterialTheme.typography.titleMedium)
-                        Switch(
-                            checked = settings.flashEnabled,
-                            onCheckedChange = { viewModel.updateFlashEnabled(it) }
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (settings.flashEnabled) {
+                                Button(onClick = { viewModel.testFlash() }) {
+                                    Text("測試")
+                                }
+                            }
+                            Switch(
+                                checked = settings.flashEnabled,
+                                onCheckedChange = { viewModel.updateFlashEnabled(it) }
+                            )
+                        }
                     }
                     if (settings.flashEnabled) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -199,6 +272,38 @@ fun SettingsScreen(
                             )
                             Text("USB 繼電器")
                         }
+                        // 閃光參數
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "持續時間: ${settings.flashDurationMs} ms",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = settings.flashDurationMs.toFloat(),
+                            onValueChange = { viewModel.updateFlashDuration(it.toLong()) },
+                            valueRange = 50f..500f,
+                            steps = 8
+                        )
+                        Text(
+                            "間隔時間: ${settings.flashIntervalMs} ms",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = settings.flashIntervalMs.toFloat(),
+                            onValueChange = { viewModel.updateFlashInterval(it.toLong()) },
+                            valueRange = 50f..500f,
+                            steps = 8
+                        )
+                        Text(
+                            "閃光次數: ${settings.flashCount}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = settings.flashCount.toFloat(),
+                            onValueChange = { viewModel.updateFlashCount(it.toInt()) },
+                            valueRange = 1f..5f,
+                            steps = 3
+                        )
                         if (settings.flashMode == FlashMode.USB_RELAY) {
                             Spacer(modifier = Modifier.height(8.dp))
                             // 裝置編號
@@ -252,4 +357,82 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+/** 標籤多選對話框，支援搜尋 */
+@Composable
+private fun LabelPickerDialog(
+    selectedLabels: Set<String>,
+    onConfirm: (Set<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selected by remember { mutableStateOf(selectedLabels.toMutableSet()) }
+    val allLabels = remember { YamNetLabels.LABELS.toList() }
+    val filteredLabels by remember(searchQuery) {
+        derivedStateOf {
+            if (searchQuery.isBlank()) allLabels
+            else allLabels.filter { it.contains(searchQuery, ignoreCase = true) }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("選擇觸發分類 (${selected.size} 項)") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("搜尋...") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { selected = filteredLabels.toMutableSet() }) {
+                        Text("全選")
+                    }
+                    TextButton(onClick = { selected = mutableSetOf() }) {
+                        Text("清除")
+                    }
+                }
+                LazyColumn(modifier = Modifier.height(400.dp)) {
+                    items(filteredLabels) { label ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selected = selected.toMutableSet().apply {
+                                        if (contains(label)) remove(label) else add(label)
+                                    }
+                                }
+                                .padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = label in selected,
+                                onCheckedChange = {
+                                    selected = selected.toMutableSet().apply {
+                                        if (it) add(label) else remove(label)
+                                    }
+                                }
+                            )
+                            Text(label, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(selected) }) {
+                Text("確認")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }

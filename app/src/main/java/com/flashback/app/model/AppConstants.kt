@@ -15,16 +15,16 @@ object AppConstants {
     const val DEFAULT_VOLUME_THRESHOLD_DB = 70.0
     const val DEFAULT_CLASSIFICATION_CONFIDENCE = 0.7f
     const val DEFAULT_MIN_DURATION_MS = 300L
+    const val DEFAULT_COOLDOWN_MS = 5000L
 
-    // 閃光燈參數
-    const val FLASH_DURATION_MS = 200L
-    const val FLASH_BURST_COUNT = 3
-    const val FLASH_BURST_INTERVAL_MS = 100L
+    // 閃光燈參數（預設模擬測速照相連拍）
+    const val DEFAULT_FLASH_DURATION_MS = 100L
+    const val DEFAULT_FLASH_COUNT = 2
+    const val DEFAULT_FLASH_INTERVAL_MS = 200L
 
     // USB 繼電器參數
     val USB_RELAY_ON_COMMAND = byteArrayOf(0xA0.toByte(), 0x01, 0x01, 0xA2.toByte())
     val USB_RELAY_OFF_COMMAND = byteArrayOf(0xA0.toByte(), 0x01, 0x00, 0xA1.toByte())
-    const val USB_RELAY_DURATION_MS = 1000L
     const val DEFAULT_USB_BAUD_RATE = 9600
     const val DEFAULT_USB_DEVICE_INDEX = 0
 
@@ -35,4 +35,10 @@ object AppConstants {
     // 預設監聽時段（24 小時制）
     const val DEFAULT_START_HOUR = 22
     const val DEFAULT_END_HOUR = 6
+
+    // 觸發音訊錄製參數
+    const val RING_BUFFER_SAMPLES = 32000   // 16kHz × 2s pre-trigger
+    const val POST_TRIGGER_SAMPLES = 32000  // 16kHz × 2s post-trigger
+    const val MP3_BITRATE = 128
+    const val MP3_QUALITY = 7
 }

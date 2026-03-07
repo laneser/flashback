@@ -77,6 +77,11 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
+    // MP3 Encoder
+    implementation(libs.android.lame) {
+        exclude(group = "com.android.support", module = "support-v4")
+    }
+
     // Test
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

@@ -6,5 +6,6 @@ data class TriggerEvent(
     val volumeDb: Double,
     val classificationLabel: String = "",
     val classificationConfidence: Float = 0f,
-    val durationMs: Long = 0L
+    val durationMs: Long = 0L,
+    val audioFilePath: String? = null
 )

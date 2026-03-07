@@ -15,7 +15,8 @@ class TriggerEngine(
     var endHour: Int = AppConstants.DEFAULT_END_HOUR,
     var targetLabels: Set<String> = DEFAULT_TARGET_LABELS,
     var classificationEnabled: Boolean = true,
-    var timeWindowEnabled: Boolean = true
+    var timeWindowEnabled: Boolean = true,
+    var cooldownMs: Long = AppConstants.DEFAULT_COOLDOWN_MS
 ) {
     companion object {
         /** 飆車相關的 YAMNet 標籤 */
@@ -29,6 +30,7 @@ class TriggerEngine(
 
     private var exceedStartTimeMs: Long = 0L
     private var isExceeding: Boolean = false
+    private var lastTriggerTimeMs: Long = 0L
 
     /**
      * 評估當前幀是否觸發。
@@ -45,6 +47,11 @@ class TriggerEngine(
         classificationConf: Float = 0f,
         currentTimeMs: Long = System.currentTimeMillis()
     ): TriggerEvent? {
+        // Cooldown 檢查
+        if (lastTriggerTimeMs > 0 && currentTimeMs - lastTriggerTimeMs < cooldownMs) {
+            return null
+        }
+
         val conditions = mutableListOf<TriggerCondition>()
 
         // 1. 音量條件（必要）
@@ -79,8 +86,9 @@ class TriggerEngine(
             val duration = currentTimeMs - exceedStartTimeMs
             val durationCond = DurationCondition(duration, minDurationMs)
             if (durationCond.isMet()) {
-                // 重置以避免連續觸發
+                // 重置並記錄觸發時間
                 isExceeding = false
+                lastTriggerTimeMs = currentTimeMs
                 return TriggerEvent(
                     timestampMs = currentTimeMs,
                     volumeDb = volumeDb,
@@ -100,5 +108,6 @@ class TriggerEngine(
     fun reset() {
         isExceeding = false
         exceedStartTimeMs = 0L
+        lastTriggerTimeMs = 0L
     }
 }

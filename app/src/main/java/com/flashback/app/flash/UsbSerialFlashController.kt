@@ -14,7 +14,10 @@ import kotlinx.coroutines.delay
 class UsbSerialFlashController(
     private val context: Context,
     private val baudRate: Int = AppConstants.DEFAULT_USB_BAUD_RATE,
-    private val deviceIndex: Int = AppConstants.DEFAULT_USB_DEVICE_INDEX
+    private val deviceIndex: Int = AppConstants.DEFAULT_USB_DEVICE_INDEX,
+    private val flashDurationMs: Long = AppConstants.DEFAULT_FLASH_DURATION_MS,
+    private val flashIntervalMs: Long = AppConstants.DEFAULT_FLASH_INTERVAL_MS,
+    private val flashCount: Int = AppConstants.DEFAULT_FLASH_COUNT
 ) : FlashController {
 
     private var port: UsbSerialPort? = null
@@ -62,9 +65,14 @@ class UsbSerialFlashController(
     }
 
     override suspend fun flashBurst() {
-        turnOn()
-        delay(AppConstants.USB_RELAY_DURATION_MS)
-        turnOff()
+        repeat(flashCount) {
+            turnOn()
+            delay(flashDurationMs)
+            turnOff()
+            if (it < flashCount - 1) {
+                delay(flashIntervalMs)
+            }
+        }
     }
 
     override fun isAvailable(): Boolean {

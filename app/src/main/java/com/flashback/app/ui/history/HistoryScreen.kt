@@ -2,6 +2,7 @@ package com.flashback.app.ui.history
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +39,7 @@ fun HistoryScreen(
     onNavigateBack: () -> Unit
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
+    val playingTimestamp by viewModel.playingEventTimestamp.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -79,7 +83,11 @@ fun HistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(events) { event ->
-                    TriggerEventCard(event)
+                    TriggerEventCard(
+                        event = event,
+                        isPlaying = playingTimestamp == event.timestampMs,
+                        onTogglePlayback = { viewModel.togglePlayback(event) }
+                    )
                 }
             }
         }
@@ -87,33 +95,57 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun TriggerEventCard(event: TriggerEvent) {
+private fun TriggerEventCard(
+    event: TriggerEvent,
+    isPlaying: Boolean,
+    onTogglePlayback: () -> Unit
+) {
     val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault())
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = dateFormat.format(Date(event.timestampMs)),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "%.1f dB".format(event.volumeDb),
-                style = MaterialTheme.typography.titleMedium
-            )
-            if (event.classificationLabel.isNotEmpty()) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${event.classificationLabel} (%.0f%%)".format(
-                        event.classificationConfidence * 100
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
+                    text = dateFormat.format(Date(event.timestampMs)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "%.1f dB".format(event.volumeDb),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (event.classificationLabel.isNotEmpty()) {
+                    Text(
+                        text = "${event.classificationLabel} (%.0f%%)".format(
+                            event.classificationConfidence * 100
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Text(
+                    text = "持續 ${event.durationMs}ms",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(
-                text = "持續 ${event.durationMs}ms",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+            // 播放按鈕（僅在有音訊檔案時顯示）
+            if (event.audioFilePath != null) {
+                IconButton(onClick = onTogglePlayback) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "停止" else "播放",
+                        tint = if (isPlaying) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
+            }
         }
     }
 }

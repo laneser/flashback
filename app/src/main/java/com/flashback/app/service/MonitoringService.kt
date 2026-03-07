@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import com.flashback.app.audio.AudioPipeline
 import com.flashback.app.audio.AudioRecordSource
+import com.flashback.app.audio.TriggerAudioRecorder
 import com.flashback.app.data.SettingsRepository
 import com.flashback.app.flash.FlashController
 import com.flashback.app.flash.FlashControllerFactory
@@ -56,10 +57,14 @@ class MonitoringService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var monitorJob: Job? = null
     private var settingsJob: Job? = null
+    private var triggerSettingsJob: Job? = null
     private var pipeline: AudioPipeline? = null
     @Volatile
     private var flashController: FlashController? = null
+    @Volatile
+    private var triggerEngine: TriggerEngine = TriggerEngine()
     private var classifier: SoundClassifier? = null
+    private var triggerAudioRecorder: TriggerAudioRecorder? = null
     private lateinit var settingsRepository: SettingsRepository
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -74,11 +79,32 @@ class MonitoringService : Service() {
         } catch (_: Exception) {
             null
         }
+        triggerAudioRecorder = TriggerAudioRecorder(this, serviceScope)
+
+        // 監聽設定變更，更新 TriggerEngine
+        triggerSettingsJob = serviceScope.launch {
+            settingsRepository.settings.collect { settings ->
+                triggerEngine.apply {
+                    volumeThresholdDb = settings.volumeThresholdDb
+                    classificationConfidence = settings.classificationConfidence
+                    minDurationMs = settings.minDurationMs
+                    startHour = settings.startHour
+                    endHour = settings.endHour
+                    classificationEnabled = settings.classificationEnabled
+                    timeWindowEnabled = settings.timeWindowEnabled
+                    targetLabels = settings.targetLabels
+                    cooldownMs = settings.cooldownMs
+                }
+            }
+        }
 
         // 監聽設定變更，重建 flashController
         settingsJob = serviceScope.launch {
             settingsRepository.settings
-                .distinctUntilChangedBy { Triple(it.flashMode, it.usbBaudRate, it.usbDeviceIndex) }
+                .distinctUntilChangedBy {
+                    listOf(it.flashMode, it.usbBaudRate, it.usbDeviceIndex,
+                        it.flashDurationMs, it.flashIntervalMs, it.flashCount)
+                }
                 .collect { settings ->
                     val old = flashController
                     flashController = FlashControllerFactory.create(this@MonitoringService, settings)
@@ -110,7 +136,6 @@ class MonitoringService : Service() {
         val audioSource = AudioRecordSource()
         val audioPipeline = AudioPipeline(audioSource, classifier)
         pipeline = audioPipeline
-        val triggerEngine = TriggerEngine()
 
         _state.value = MonitoringState.LISTENING
 
@@ -118,6 +143,9 @@ class MonitoringService : Service() {
             audioPipeline.start().collect { frame ->
                 _currentDb.value = frame.rmsDb
                 _currentFft.value = frame.fftMagnitudes
+
+                // 餵入觸發音訊錄製器
+                triggerAudioRecorder?.onFrame(frame)
 
                 val classification = audioPipeline.lastClassification
                 val label = classification?.label ?: ""
@@ -134,8 +162,15 @@ class MonitoringService : Service() {
 
                 if (event != null) {
                     _state.value = MonitoringState.TRIGGERED
-                    _triggerEvents.emit(event)
                     flashController?.flashBurst()
+
+                    // 錄製觸發音訊，完成後 emit 帶 audioFilePath 的事件
+                    triggerAudioRecorder?.onTrigger(event.timestampMs) { audioPath ->
+                        serviceScope.launch {
+                            _triggerEvents.emit(event.copy(audioFilePath = audioPath))
+                        }
+                    } ?: _triggerEvents.emit(event)
+
                     _state.value = MonitoringState.LISTENING
                 }
             }
@@ -145,6 +180,8 @@ class MonitoringService : Service() {
     override fun onDestroy() {
         monitorJob?.cancel()
         settingsJob?.cancel()
+        triggerSettingsJob?.cancel()
+        triggerAudioRecorder?.stop()
         pipeline?.stop()
         classifier?.close()
         (flashController as? UsbSerialFlashController)?.close()
