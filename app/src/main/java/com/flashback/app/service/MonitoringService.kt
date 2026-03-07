@@ -62,6 +62,8 @@ class MonitoringService : Service() {
     @Volatile
     private var flashController: FlashController? = null
     @Volatile
+    private var flashEnabled: Boolean = true
+    @Volatile
     private var triggerEngine: TriggerEngine = TriggerEngine()
     private var classifier: SoundClassifier? = null
     private var triggerAudioRecorder: TriggerAudioRecorder? = null
@@ -84,6 +86,7 @@ class MonitoringService : Service() {
         // 監聽設定變更，更新 TriggerEngine
         triggerSettingsJob = serviceScope.launch {
             settingsRepository.settings.collect { settings ->
+                flashEnabled = settings.flashEnabled
                 triggerEngine.apply {
                     volumeThresholdDb = settings.volumeThresholdDb
                     classificationConfidence = settings.classificationConfidence
@@ -162,7 +165,9 @@ class MonitoringService : Service() {
 
                 if (event != null) {
                     _state.value = MonitoringState.TRIGGERED
-                    flashController?.flashBurst()
+                    if (flashEnabled) {
+                        flashController?.flashBurst()
+                    }
 
                     // 錄製觸發音訊，完成後 emit 帶 audioFilePath 的事件
                     triggerAudioRecorder?.onTrigger(event.timestampMs) { audioPath ->
